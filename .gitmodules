@@ -1,0 +1,3 @@
+[submodule "AnacondaEnv"]
+	path = AnacondaEnv
+	url = https://github.com/anishpillay2002/AnacondaEnv.git
