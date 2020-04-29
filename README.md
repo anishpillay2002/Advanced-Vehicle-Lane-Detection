@@ -26,36 +26,36 @@ Here is a bried summary of the steps that needed to be taken
 ## Details:
 ### Camera Calibration
 I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image. Thus, objp is just a replicated array of coordinates, and objpoints will be appended with a copy of it every time I successfully detect all chessboard corners in a test image. imgpoints will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.   
-![alt text][docimages/chess1.png]  
+![](docimages/chess1.png)  
 I then used the output objpoints and imgpoints to compute the camera calibration and distortion coefficients using the cv2.calibrateCamera() function. I applied this distortion correction to the test image using the cv2.undistort() function and obtained this result:  
-![alt text][docimages/chess2.jpg]  
+![](docimages/chess2.jpg)  
 After undistorting the image I used perspective Transform to to warp the image. 
-![alt text][docimages/chess3.png]  
+![](docimages/chess3.png)  
 
 ### Distortion Correction 
 I used the objpoints and imgpoints matrix obtained from the chessboard calibration to calibrate the camera as well as undistort it.  
-![alt text][docimages/street1.png]   
+![](docimages/street1.png)   
 
 ### Color Transforms and gradient
 img_process() function processed the input image to perform gradient(Sobel) and color transform(HLS). By using this technique, we can easily apply a threshold on the color values to distinguish between the lane and the road. This function also undistorts the image as well as performs a perspective transform for a bird eye view of the lane.  
-![alt text][docimages/lane.png]  
+![](docimages/lane.png)  
 
 ### Perspective Transform
 For perspective transform, I got four corner points from the lane image as my src and considered a destination rectangle of shape [250,0]  ,  [950,0]  ,  [950,700]  ,  [250,700]. Then I used opencv function of getPerspectiveTransform to get the transform matrix and used warpPerspective function to warp the image  
-![alt text][docimages/lane2.png]  
+![](docimages/lane2.png)  
 
 ### Lane Identification
 Sliding window method was used to locate the lanes. By taking a histogram of the bottom half of the image, we can determine the lanes based on the peak values.  
 I used 9 sliding windows for left and right line each to determine the lane path. Bottom windows were placed based on the peak values and the rest were placed based on the midpoint of the previous window.  
 Finally, I fitted a second order polynomial through the left and right lanes to predict the lane curvature.  
-![alt text][docimages/lane3.png]  
+![](docimages/lane3.png)  
 
 Here's the formula used to calculate radius of curvature:  
-![alt text][docimages/RFormula.png]  
+![](docimages/RFormula.png)  
 
 ### Image Processing
 All of the above code was combined to process a lane image and detect lane lines. An inverse transform of the warped perspective image was used to plot the lane lines back on the road.  
-![alt text][docimages/final.png]  
+![](docimages/final.png)  
 
 ### Video Processing
 Video consists of a frame of images. So the above code was applied to each frame of the video to obtain a visual representation of lane detection.
