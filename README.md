@@ -1,35 +1,67 @@
-## Advanced Lane Finding
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
+## Advanced Lane Detection
+
+The goal of this project is to detect lane and lane curvature based on the video feed from a vehicle camera.
+
+Here is a bried summary of the steps that needed to be taken
+* Camera calibration matrix and distortion coefficients needed to be calculated based on a set of chessboard image
+* Apply these coefficients to correct the raw images
+* Color transforms , gradients(Sobel) was applied to create a thresholded binary image. 
+* Applied a perspective transform to rectify binary image ("birds-eye view").
+* Detected lane pixels and fit to find the lane boundary from the binary image
+* Determined the curvature of the lane and vehicle position with respect to center
+* Warped the detected lane boundaries back onto the original image.
+* Overlayed a visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
 
 
-In this project, your goal is to write a software pipeline to identify the lane boundaries in a video, but the main output or product we want you to create is a detailed writeup of the project.  Check out the [writeup template](https://github.com/udacity/CarND-Advanced-Lane-Lines/blob/master/writeup_template.md) for this project and use it as a starting point for creating your own writeup.  
+### Repository Contents
+Files:
+    main.ipynb: is a Jupyter Notebook containing the project and detailed explanation of each step.
+    You can setup the anaconda environment by importing MachineLearning.yml from AnacondaEnv folder
+Folders:
+    AnacondaEnv: contains yml file to setup the anaconda environment. File to import for this project: MachineLearning.yml  
+    CameraCalibrationImages: contains all checkerboard images for camera calibration
+    docimages: document images
+    ResultVideo: contains the input and output video of the project
+    TestImagesAndVideos: contains the images worked on for image processing and lane detection  
 
-Creating a great writeup:
----
-A great writeup should include the rubric points as well as your description of how you addressed each point.  You should include a detailed description of the code used in each step (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
+## Details:
+### Camera Calibration
+I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image. Thus, objp is just a replicated array of coordinates, and objpoints will be appended with a copy of it every time I successfully detect all chessboard corners in a test image. imgpoints will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
+![alt text](\docimages\chess1.png)  
+I then used the output objpoints and imgpoints to compute the camera calibration and distortion coefficients using the cv2.calibrateCamera() function. I applied this distortion correction to the test image using the cv2.undistort() function and obtained this result:
+![alt text](\docimages\chess2.jpg)  
+After undistorting the image I used perspective Transform to to warp the image. 
+![alt text](\docimages\chess3.png)  
 
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
+### Distortion Correction 
+I used the objpoints and imgpoints matrix obtained from the chessboard calibration to calibrate the camera as well as undistort it.  
+![alt text](\docimages\street1.png) 
 
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup.
+### Color Transforms and gradient
+img_process() function processed the input image to perform gradient(Sobel) and color transform(HLS). By using this technique, we can easily apply a threshold on the color values to distinguish between the lane and the road. This function also undistorts the image as well as performs a perspective transform for a bird eye view of the lane.
+![alt text](\docimages\lane.png)  
 
-The Project
----
+### Perspective Transform
+For perspective transform, I got four corner points from the lane image as my src and considered a destination rectangle of shape [250,0]  ,  [950,0]  ,  [950,700]  ,  [250,700]. Then I used opencv function of getPerspectiveTransform to get the transform matrix and used warpPerspective function to warp the image
+![alt text](\docimages\lane2.png)  
 
-The goals / steps of this project are the following:
+### Lane Identification
+Sliding window method was used to locate the lanes. By taking a histogram of the bottom half of the image, we can determine the lanes based on the peak values.  
+I used 9 sliding windows for left and right line each to determine the lane path. Bottom windows were placed based on the peak values and the rest were placed based on the midpoint of the previous window.  
+Finally, I fitted a second order polynomial through the left and right lanes to predict the lane curvature.  
+![alt text](\docimages\lane3.png)  
 
-* Compute the camera calibration matrix and distortion coefficients given a set of chessboard images.
-* Apply a distortion correction to raw images.
-* Use color transforms, gradients, etc., to create a thresholded binary image.
-* Apply a perspective transform to rectify binary image ("birds-eye view").
-* Detect lane pixels and fit to find the lane boundary.
-* Determine the curvature of the lane and vehicle position with respect to center.
-* Warp the detected lane boundaries back onto the original image.
-* Output visual display of the lane boundaries and numerical estimation of lane curvature and vehicle position.
+Here's the formula used to calculate radius of curvature:
+![alt text](\docimages\RFormula.png)  
 
-The images for camera calibration are stored in the folder called `camera_cal`.  The images in `test_images` are for testing your pipeline on single frames.  If you want to extract more test images from the videos, you can simply use an image writing method like `cv2.imwrite()`, i.e., you can read the video in frame by frame as usual, and for frames you want to save for later you can write to an image file.  
+### Image Processing
+All of the above code was combined to process a lane image and detect lane lines. An inverse transform of the warped perspective image was used to plot the lane lines back on the road.  
+![alt text](\docimages\final.png) 
 
-To help the reviewer examine your work, please save examples of the output from each stage of your pipeline in the folder called `ouput_images`, and include a description in your writeup for the project of what each image shows.    The video called `project_video.mp4` is the video your pipeline should work well on.  
+### Video Processing
+Video consists of a frame of images. So the above code was applied to each frame of the video to obtain a visual representation of lane detection.
+You can run the Jupyter notebook file to watch the video or you could watch it here:  
+https://www.youtube.com/watch?v=ObhuzwvHhhY&feature=youtu.be
 
-The `challenge_video.mp4` video is an extra (and optional) challenge for you if you want to test your pipeline under somewhat trickier conditions.  The `harder_challenge.mp4` video is another optional challenge and is brutal!
-
-If you're feeling ambitious (again, totally optional though), don't stop there!  We encourage you to go out and take video of your own, calibrate your camera and show us how you would implement this project from scratch!
+### Improvements
+The algorithm currently stores 12 previous fit line coefficients and takes a running average of them for each frame. This is good for the basic lane detection, but lacks sanity checks on whether the lane detection is good or not. Such issues make it difficult to detect lanes on a very sunny day or night time, where the contrast is not much.
